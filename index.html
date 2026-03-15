@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <base href="/resiter-app/">
+    <title>RESITER - Gestor de Hojas de Seguridad de Materiales</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+    
+    <style>
+        /* Estilos mantienen igual que antes */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdef5 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: white;
+            padding: 0.5rem 1rem;
+            box-shadow: 0 2px 15px rgba(0,169,224,0.2);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 3px solid #00a9e0;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: #00a9e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 4px 8px rgba(0,169,224,0.3);
+        }
+
+        .company-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .company-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00a9e0;
+            letter-spacing: 1px;
+        }
+
+        .app-name {
+            font-size: 0.7rem;
+            color: #333;
+            opacity: 0.8;
+        }
+
+        .qr-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f5fbff;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            border: 1px solid #00a9e0;
+        }
+
+        .qr-section span {
+            font-size: 0.8rem;
+            color: #00a9e0;
+        }
+
+        .qr-button {
+            background: #00a9e0;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+            padding: 0.4rem 0.8rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .nav-menu a:hover {
+            color: #00a9e0;
+            background: #e3f2fd;
+        }
+
+        .nav-menu a.active {
+            background: #00a9e0;
+            color: white;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 80px auto 1rem;
+            padding: 1rem;
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 5px 20px rgba(0,169,224,0.1);
+            display: none;
+            border: 1px solid #e3f2fd;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            border-bottom: 2px solid #e3f2fd;
+            padding-bottom: 0.8rem;
+        }
+
+        .section-title {
+            color: #00a9e0;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            background: #00a9e0;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            background: #0095c7;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,169,224,0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #00a9e0;
+            color: #00a9e0;
+        }
+
+        .btn-outline:hover {
+            background: #00a9e0;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #e3f2fd;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .material-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .material-table th {
+            background: #00a9e0;
+            color: white;
+            padding: 0.8rem 0.5rem;
+            text-align: left;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .material-table td {
+            padding: 0.8rem 0.5rem;
+            border-bottom: 1px solid #e3f2fd;
+            font-size: 0.85rem;
+        }
+
+        .material-table tr:hover {
+            background: #f5fbff;
+        }
+
+        .material-table .actions {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-icon {
+            padding: 0.4rem 0.6rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            background: transparent;
+            border: 1px solid #00a9e0;
+            color: #00a9e0;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 35px;
+            text-align: center;
+        }
+
+        .btn-icon:hover {
+            background: #00a9e0;
+            color: white;
+        }
+
+        .btn-icon-pdf {
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        .btn-icon-pdf:hover {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-icon-view {
+            border-color: #00a9e0;
+            color: #00a9e0;
+        }
+
+        .btn-icon-view:hover {
+            background: #00a9e0;
+            color: white;
+        }
+
+        .btn-icon-edit {
+            border-color: #ffc107;
+            color: #ffc107;
+        }
+
+        .btn-icon-edit:hover {
+            background: #ffc107;
+            color: white;
+        }
+
+        .btn-icon-delete {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .btn-icon-delete:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge {
+            padding: 0.2rem 0.4rem;
+            border-radius: 5px;
+            color: white;
+            font-size: 0.7rem;
+            display: inline-block;
+            margin: 0.1rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 1.2rem;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-top: 5px solid #00a9e0;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e3f2fd;
+            padding-bottom: 0.8rem;
+        }
+
+        .modal-header h2 {
+            color: #00a9e0;
+            font-size: 1.2rem;
+        }
+
+        .close-btn {
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-btn:hover {
+            color: #00a9e0;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.7rem;
+            border: 2px solid #e3f2fd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+            padding: 0.8rem;
+            background: #f5fbff;
+            border-radius: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.85rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 0.3rem;
+            accent-color: #00a9e0;
+        }
+
+        .compatibility-container {
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .compatibility-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 600px;
+        }
+
+        .compatibility-table th,
+        .compatibility-table td {
+            border: 1px solid #e3f2fd;
+            padding: 0.5rem;
+            text-align: center;
+        }
+
+        .compatibility-table th {
+            background: #00a9e0;
+            color: white;
+            position: sticky;
+            top: 0;
+            font-size: 0.75rem;
+        }
+
+        .compatibility-table td:first-child {
+            background: #f5fbff;
+            font-weight: bold;
+            position: sticky;
+            left: 0;
+        }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-card {
+            background: #f5fbff;
+            padding: 1rem;
+            border-radius: 10px;
+            border-left: 4px solid #00a9e0;
+        }
+
+        .info-card h3 {
+            color: #00a9e0;
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #00a9e0 0%, #0095c7 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,169,224,0.2);
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 1rem;
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .footer span {
+            color: #00a9e0;
+            font-weight: bold;
+        }
+
+        .resiter-badge {
+            background: #00a9e0;
+            color: white;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            display: inline-block;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .detail-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .detail-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #e3f2fd;
+            font-size: 0.9rem;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #00a9e0;
+        }
+
+        .pdf-viewer {
+            width: 100%;
+            height: 400px;
+            border: 2px solid #e3f2fd;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .file-info {
+            background: #f5fbff;
+            padding: 0.5rem;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            word-break: break-all;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .mobile-warning {
+            display: none;
+            background: #fff3cd;
+            color: #856404;
+            padding: 0.5rem;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .mobile-warning {
+                display: block;
+            }
+            
+            .btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            
+            .section-title {
+                font-size: 1.1rem;
+            }
+        }
+
+        .pdf-hint {
+            color: #666;
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            font-style: italic;
+        }
+
+        .qr-modal-content {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 1rem auto;
+            background: #f5fbff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #00a9e0;
+            border-radius: 10px;
+        }
+
+        .qr-code img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .url-box {
+            background: #f5fbff;
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            word-break: break-all;
+            font-size: 0.8rem;
+            border: 1px solid #00a9e0;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #00a9e0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo-container">
+                <div class="logo">
+                    <span>R</span>
+                </div>
+                <div class="company-info">
+                    <div class="company-name">RESITER</div>
+                    <div class="app-name">Gestor de Hojas de Seguridad</div>
+                </div>
+            </div>
+            
+            <div class="qr-section">
+                <span>📱 Compartir App</span>
+                <button class="qr-button" onclick="showQRCode()">📲</button>
+            </div>
+            
+            <ul class="nav-menu">
+                <li><a onclick="showSection('materiales', this)" class="active">📋 Materiales</a></li>
+                <li><a onclick="showSection('compatibilidad', this)">🔄 Compatibilidad</a></li>
+                <li><a onclick="showSection('explicacion', this)">📚 Guía</a></li>
+                <li><a onclick="showSyncStatus()" title="Sincronización">☁️ Sincronizar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Sección de Materiales -->
+        <div id="materiales" class="section active">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>📋</span>
+                    Materiales Registrados
+                </h2>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-outline" onclick="showStats()">
+                        <span>📊</span> Stats
+                    </button>
+                    <button class="btn" onclick="openModal('add')">
+                        <span>➕</span> Nuevo
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mobile-warning">
+                👆 Desliza la tabla horizontalmente para ver más información
+            </div>
+            
+            <div class="stats-container" id="statsPreview">
+                <!-- Se llenará dinámicamente -->
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="searchMaterial" placeholder="🔍 Buscar material..." onkeyup="searchMaterials()">
+            </div>
+
+            <div class="table-container">
+                <table class="material-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Fabricante</th>
+                            <th>Peligrosidad</th>
+                            <th>Familia</th>
+                            <th>Revisión</th>
+                            <th>Ubicación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="materialList">
+                        <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sección de Compatibilidad -->
+        <div id="compatibilidad" class="section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>🔄</span>
+                    Matriz de Compatibilidad
+                </h2>
+                <button class="btn btn-outline" onclick="generateCompatibilityTable()">
+                    <span>🔄</span> Actualizar
+                </button>
+            </div>
+            
+            <div class="mobile-warning">
+                👆 Desliza la tabla horizontalmente para ver la matriz completa
+            </div>
+            
+            <div class="compatibility-container">
+                <table class="compatibility-table" id="compatibilityTable">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Familia</th>
+                        </tr>
+                    </thead>
+                    <tbody id="compatibilityBody">
+                        <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-card" style="margin-top: 1rem;">
+                <h3>🔍 Verificar Compatibilidad</h3>
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <select id="material1" style="flex: 1; min-width: 150px; padding: 0.6rem; border: 2px solid #e3f2fd; border-radius: 8px;">
+                        <option value="">Material 1</option>
+                    </select>
+                    <span style="font-size: 1.2rem;">↔️</span>
+                    <select id="material2" style="flex: 1; min-width: 150px; padding: 0.6rem; border: 2px solid #e3f2fd; border-radius: 8px;">
+                        <option value="">Material 2</option>
+                    </select>
+                    <button class="btn" onclick="checkSpecificCompatibility()">Verificar</button>
+                </div>
+                <div id="compatibilityResult" style="margin-top: 0.8rem;"></div>
+            </div>
+        </div>
+
+        <!-- Sección de Explicación -->
+        <div id="explicacion" class="section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>📚</span>
+                    Guía de Compatibilidad
+                </h2>
+            </div>
+
+            <div class="info-cards">
+                <div class="info-card">
+                    <h3>✅ Compatible</h3>
+                    <p>Pueden almacenarse juntos sin riesgo significativo.</p>
+                </div>
+                <div class="info-card">
+                    <h3>❌ Incompatible</h3>
+                    <p>NUNCA deben almacenarse juntos. Reacción violenta.</p>
+                </div>
+                <div class="info-card">
+                    <h3>⚠️ Precaución</h3>
+                    <p>Requieren condiciones especiales de almacenamiento.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para QR y compartir -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content qr-modal-content">
+            <div class="modal-header">
+                <h2>📲 Compartir Aplicación</h2>
+                <span class="close-btn" onclick="closeQRModal()">&times;</span>
+            </div>
+            
+            <div class="qr-code" id="qrContainer">
+                <div id="qrPlaceholder">Cargando QR...</div>
+            </div>
+            
+            <div class="url-box" id="appUrl">
+                Cargando URL...
+            </div>
+            
+            <p style="margin: 1rem 0; font-size: 0.9rem;">
+                Escanea el código QR o comparte el enlace para que todos vean la misma información actualizada.
+            </p>
+            
+            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                <button class="btn" onclick="copyAppUrl()">
+                    📋 Copiar Enlace
+                </button>
+                <button class="btn btn-success" onclick="window.open(getCurrentUrl(), '_blank')">
+                    🌐 Abrir en nueva pestaña
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de sincronización -->
+    <div id="syncModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>☁️ Sincronización en la Nube</h2>
+                <span class="close-btn" onclick="closeSyncModal()">&times;</span>
+            </div>
+            
+            <div style="text-align: center; padding: 1rem;">
+                <div class="loading" id="syncLoading" style="display: none;"></div>
+                <div id="syncStatus"></div>
+            </div>
+            
+            <div class="share-buttons" style="justify-content: center;">
+                <button class="btn" onclick="forceSync()" id="syncButton">
+                    <span>🔄</span> Sincronizar Ahora
+                </button>
+            </div>
+            
+            <p style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
+                Los cambios se sincronizan automáticamente. Todos los dispositivos verán la misma información.
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar material -->
+    <div id="materialModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Agregar Material</h2>
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="materialForm" onsubmit="saveMaterial(event)">
+                <input type="hidden" id="materialId">
+                
+                <div class="form-group">
+                    <label>🏷️ Nombre del Producto:*</label>
+                    <input type="text" id="materialName" required placeholder="Ej: Ácido Sulfúrico">
+                </div>
+
+                <div class="form-group">
+                    <label>🏭 Fabricante:*</label>
+                    <input type="text" id="manufacturer" required placeholder="Ej: BASF, Merck">
+                </div>
+
+                <div class="form-group">
+                    <label>🧪 Familia Química:*</label>
+                    <select id="materialFamily" required>
+                        <option value="">Seleccionar</option>
+                        <option value="No clasificados">No clasificados</option>
+                        <option value="Ácidos">Ácidos</option>
+                        <option value="Bases">Bases</option>
+                        <option value="Oxidantes">Oxidantes</option>
+                        <option value="Inflamables">Inflamables</option>
+                        <option value="Tóxicos">Tóxicos</option>
+                        <option value="Corrosivos">Corrosivos</option>
+                        <option value="Explosivos">Explosivos</option>
+                        <option value="Gases">Gases</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>⚠️ Peligrosidad:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hazardCorrosive" value="Corrosivo">
+                            <label for="hazardCorrosive">Corrosivo</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hazardFlammable" value="Inflamable">
+                            <label for="hazardFlammable">Inflamable</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hazardToxic" value="Tóxico">
+                            <label for="hazardToxic">Tóxico</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hazardOxidizing" value="Comburente">
+                            <label for="hazardOxidizing">Comburente</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hazardExplosive" value="Explosivo">
+                            <label for="hazardExplosive">Explosivo</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hazardHarmful" value="Nocivo">
+                            <label for="hazardHarmful">Nocivo</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hazardIrritant" value="Irritante">
+                            <label for="hazardIrritant">Irritante</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hazardEnvironmental" value="Peligroso ambiental">
+                            <label for="hazardEnvironmental">Peligroso ambiental</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hazardHealth" value="Peligro para la salud">
+                            <label for="hazardHealth">Peligro para la salud</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📅 Fecha de Revisión:*</label>
+                    <input type="date" id="materialExpiry" required>
+                </div>
+
+                <div class="form-group">
+                    <label>📊 Nivel de Peligrosidad:*</label>
+                    <select id="materialHazard" required>
+                        <option value="Bajo">Bajo</option>
+                        <option value="Medio">Medio</option>
+                        <option value="Alto">Alto</option>
+                        <option value="Extremo">Extremo</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📄 PDF - Hoja de Seguridad:</label>
+                    <input type="file" id="materialPdf" accept=".pdf" onchange="handlePdfUpload(event)">
+                    <div class="pdf-hint">El PDF se guardará en la nube</div>
+                    <div id="pdfFileInfo" class="file-info"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 MSDS (Texto):</label>
+                    <textarea id="materialMsds" rows="3" placeholder="Información de seguridad..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>🏠 Almacenamiento:</label>
+                    <input type="text" id="materialStorage" placeholder="Condiciones de almacenamiento">
+                </div>
+
+                <div class="form-group">
+                    <label>🛡️ EPP Requerido:</label>
+                    <input type="text" id="materialPPE" placeholder="Equipo de protección">
+                </div>
+
+                <div class="form-group">
+                    <label>🚨 Primeros Auxilios:</label>
+                    <textarea id="materialFirstAid" rows="2" placeholder="Instrucciones..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>📦 Cantidad:</label>
+                    <input type="text" id="materialQuantity" placeholder="Ej: 2.5L">
+                </div>
+
+                <div class="form-group">
+                    <label>📍 Ubicación:</label>
+                    <input type="text" id="materialLocation" placeholder="Estante, laboratorio...">
+                </div>
+
+                <div class="form-group">
+                    <label>📋 Observaciones:</label>
+                    <textarea id="materialObservations" rows="2" placeholder="Notas adicionales..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de estadísticas -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 Estadísticas</h2>
+                <span class="close-btn" onclick="closeStatsModal()">&times;</span>
+            </div>
+            <div id="statsContent"></div>
+        </div>
+    </div>
+
+    <!-- Modal de detalles -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📋 Detalles del Material</h2>
+                <span class="close-btn" onclick="closeDetailModal()">&times;</span>
+            </div>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+    <!-- Modal PDF -->
+    <div id="pdfModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>📄 <span id="pdfMaterialName"></span></h2>
+                <span class="close-btn" onclick="closePdfModal()">&times;</span>
+            </div>
+            <iframe id="pdfViewer" class="pdf-viewer" src=""></iframe>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><span>RESITER</span> - Gestor de Hojas de Seguridad en la Nube</p>
+    </div>
+
+    <script>
+        // Configuración de Firebase - ¡DEBES REEMPLAZAR ESTO CON TUS DATOS!
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxLJQqJqJqJqJqJqJqJqJqJqJqJqJqJqJq",
+            authDomain: "resiter-app.firebaseapp.com",
+            projectId: "resiter-app",
+            storageBucket: "resiter-app.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abc123def456ghi789jkl"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Variables globales
+        let materials = [];
+        let unsubscribe = null;
+        let currentPdfFile = null;
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFirebaseSync();
+            setupRealtimeSync();
+        });
+
+        // Configurar sincronización en tiempo real
+        function setupRealtimeSync() {
+            // Escuchar cambios en Firestore
+            unsubscribe = db.collection('materials').onSnapshot((snapshot) => {
+                materials = [];
+                snapshot.forEach((doc) => {
+                    materials.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                // Ordenar por nombre
+                materials.sort((a, b) => a.name.localeCompare(b.name));
+                
+                // Actualizar UI
+                loadMaterials();
+                updatePreviewStats();
+                showNotification('Datos sincronizados', 'success');
+            }, (error) => {
+                console.error("Error de sincronización:", error);
+                showNotification('Error de conexión', 'error');
+            });
+        }
+
+        // Inicializar con datos de ejemplo si es necesario
+        async function initializeFirebaseSync() {
+            const snapshot = await db.collection('materials').get();
+            
+            if (snapshot.empty) {
+                // Crear datos de ejemplo
+                const exampleMaterials = [
+                    {
+                        name: 'Ácido Sulfúrico',
+                        manufacturer: 'Merck',
+                        family: 'Ácidos',
+                        hazards: ['Corrosivo', 'Tóxico', 'Peligro para la salud'],
+                        expiry: '2025-12-31',
+                        hazard: 'Alto',
+                        msds: 'MSDS Ácido Sulfúrico - Corrosivo',
+                        pdfUrl: null,
+                        pdfName: null,
+                        storage: 'Lugar seco, lejos de bases',
+                        ppe: 'Guantes, gafas, bata',
+                        firstAid: 'Enjuagar con agua',
+                        quantity: '2.5L',
+                        location: 'Estante A1',
+                        observations: 'Mantener en vidrio',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    },
+                    {
+                        name: 'Hidróxido de Sodio',
+                        manufacturer: 'BASF',
+                        family: 'Bases',
+                        hazards: ['Corrosivo'],
+                        expiry: '2025-10-15',
+                        hazard: 'Alto',
+                        msds: 'MSDS Hidróxido de Sodio',
+                        pdfUrl: null,
+                        pdfName: null,
+                        storage: 'Contenedores plásticos',
+                        ppe: 'Guantes, gafas',
+                        firstAid: 'Lavar con agua',
+                        quantity: '1kg',
+                        location: 'Estante B2',
+                        observations: 'Higroscópico',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                ];
+
+                for (let material of exampleMaterials) {
+                    await db.collection('materials').add(material);
+                }
+                
+                showNotification('Datos de ejemplo creados', 'success');
+            }
+        }
+
+        // Guardar material en Firebase
+        async function saveMaterial(event) {
+            event.preventDefault();
+            
+            const hazards = [];
+            document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked').forEach(cb => {
+                hazards.push(cb.value);
+            });
+
+            const materialData = {
+                name: document.getElementById('materialName').value,
+                manufacturer: document.getElementById('manufacturer').value,
+                family: document.getElementById('materialFamily').value,
+                hazards: hazards,
+                expiry: document.getElementById('materialExpiry').value,
+                hazard: document.getElementById('materialHazard').value,
+                msds: document.getElementById('materialMsds').value,
+                storage: document.getElementById('materialStorage').value,
+                ppe: document.getElementById('materialPPE').value,
+                firstAid: document.getElementById('materialFirstAid').value,
+                quantity: document.getElementById('materialQuantity').value,
+                location: document.getElementById('materialLocation').value,
+                observations: document.getElementById('materialObservations').value,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            const materialId = document.getElementById('materialId').value;
+
+            try {
+                // Subir PDF si existe
+                if (currentPdfFile) {
+                    showNotification('Subiendo PDF...', 'success');
+                    const storageRef = storage.ref();
+                    const pdfRef = storageRef.child(`pdfs/${Date.now()}_${currentPdfFile.name}`);
+                    await pdfRef.put(currentPdfFile);
+                    const pdfUrl = await pdfRef.getDownloadURL();
+                    materialData.pdfUrl = pdfUrl;
+                    materialData.pdfName = currentPdfFile.name;
+                }
+
+                if (materialId) {
+                    // Actualizar existente
+                    await db.collection('materials').doc(materialId).update(materialData);
+                    showNotification('Material actualizado', 'success');
+                } else {
+                    // Crear nuevo
+                    materialData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection('materials').add(materialData);
+                    showNotification('Material guardado', 'success');
+                }
+
+                closeModal();
+                currentPdfFile = null;
+                
+            } catch (error) {
+                console.error("Error al guardar:", error);
+                showNotification('Error al guardar', 'error');
+            }
+        }
+
+        // Manejar carga de PDF
+        function handlePdfUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.type !== 'application/pdf') {
+                    showNotification('Solo se permiten archivos PDF', 'error');
+                    return;
+                }
+                if (file.size > 10 * 1024 * 1024) { // 10MB
+                    showNotification('El PDF es muy grande (máx 10MB)', 'error');
+                    return;
+                }
+                currentPdfFile = file;
+                document.getElementById('pdfFileInfo').innerHTML = `📄 ${file.name} (${(file.size/1024).toFixed(2)} KB)`;
+            }
+        }
+
+        // Ver PDF
+        async function viewPdf(id) {
+            const material = materials.find(m => m.id === id);
+            if (material && material.pdfUrl) {
+                document.getElementById('pdfMaterialName').textContent = material.name;
+                document.getElementById('pdfViewer').src = material.pdfUrl;
+                document.getElementById('pdfModal').classList.add('active');
+            } else {
+                showNotification('No hay PDF disponible', 'error');
+            }
+        }
+
+        // Eliminar material
+        async function deleteMaterial(id) {
+            if (confirm('¿Eliminar este material?')) {
+                try {
+                    const material = materials.find(m => m.id === id);
+                    
+                    // Eliminar PDF si existe
+                    if (material.pdfUrl) {
+                        const pdfRef = storage.refFromURL(material.pdfUrl);
+                        await pdfRef.delete().catch(() => {});
+                    }
+                    
+                    await db.collection('materials').doc(id).delete();
+                    showNotification('Material eliminado', 'success');
+                } catch (error) {
+                    console.error("Error al eliminar:", error);
+                    showNotification('Error al eliminar', 'error');
+                }
+            }
+        }
+
+        // Funciones para compartir
+        function getCurrentUrl() {
+            return window.location.href;
+        }
+
+        function showQRCode() {
+            const modal = document.getElementById('qrModal');
+            const url = getCurrentUrl();
+            
+            document.getElementById('appUrl').textContent = url;
+            
+            // Crear QR usando API gratuita
+            const qrContainer = document.getElementById('qrContainer');
+            qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}" alt="QR Code">`;
+            
+            modal.classList.add('active');
+        }
+
+        function closeQRModal() {
+            document.getElementById('qrModal').classList.remove('active');
+        }
+
+        function copyAppUrl() {
+            const url = getCurrentUrl();
+            navigator.clipboard.writeText(url).then(() => {
+                showNotification('URL copiada al portapapeles', 'success');
+            }).catch(() => {
+                showNotification('Error al copiar', 'error');
+            });
+        }
+
+        // Mostrar estado de sincronización
+        function showSyncStatus() {
+            const modal = document.getElementById('syncModal');
+            const status = document.getElementById('syncStatus');
+            
+            status.innerHTML = `
+                <p style="margin: 1rem 0;">✅ Conectado a la nube</p>
+                <p>📊 ${materials.length} materiales sincronizados</p>
+                <p>🔄 Actualización en tiempo real activada</p>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeSyncModal() {
+            document.getElementById('syncModal').classList.remove('active');
+        }
+
+        async function forceSync() {
+            const button = document.getElementById('syncButton');
+            const loading = document.getElementById('syncLoading');
+            const status = document.getElementById('syncStatus');
+            
+            button.disabled = true;
+            loading.style.display = 'inline-block';
+            status.innerHTML = '<p>Sincronizando...</p>';
+            
+            try {
+                // Forzar recarga desde Firebase
+                const snapshot = await db.collection('materials').get();
+                materials = [];
+                snapshot.forEach((doc) => {
+                    materials.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                materials.sort((a, b) => a.name.localeCompare(b.name));
+                loadMaterials();
+                updatePreviewStats();
+                
+                status.innerHTML = '<p style="color: #28a745;">✅ Sincronización completada</p>';
+                showNotification('Sincronización exitosa', 'success');
+            } catch (error) {
+                status.innerHTML = '<p style="color: #dc3545;">❌ Error de sincronización</p>';
+                showNotification('Error al sincronizar', 'error');
+            } finally {
+                button.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        // Las demás funciones se mantienen igual...
+        function showSection(sectionId, element) {
+            document.querySelectorAll('.nav-menu a').forEach(link => {
+                link.classList.remove('active');
+            });
+            if (element) element.classList.add('active');
+            
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            
+            if (sectionId === 'compatibilidad') {
+                loadMaterialsForCompatibility();
+                generateCompatibilityTable();
+            }
+        }
+
+        function loadMaterials() {
+            const tbody = document.getElementById('materialList');
+            if (!tbody) return;
+            
+            const searchTerm = document.getElementById('searchMaterial')?.value.toLowerCase() || '';
+            
+            const filteredMaterials = materials.filter(m => 
+                m.name.toLowerCase().includes(searchTerm) ||
+                (m.manufacturer && m.manufacturer.toLowerCase().includes(searchTerm)) ||
+                m.family.toLowerCase().includes(searchTerm) ||
+                (m.hazards && m.hazards.some(h => h.toLowerCase().includes(searchTerm))) ||
+                (m.location && m.location.toLowerCase().includes(searchTerm))
+            );
+
+            tbody.innerHTML = filteredMaterials.map(material => {
+                let pdfButton = '';
+                if (material.pdfUrl) {
+                    pdfButton = `<button class="btn-icon btn-icon-pdf" onclick="event.stopPropagation(); viewPdf('${material.id}')" title="Ver PDF">📄</button>`;
+                }
+                
+                return `
+                <tr>
+                    <td><strong>${material.name}</strong></td>
+                    <td>${material.manufacturer || 'N/E'}</td>
+                    <td>
+                        ${material.hazards ? material.hazards.slice(0,2).map(h => 
+                            `<span class="badge" style="background: ${getHazardColorByName(h)}">${h}</span>`
+                        ).join(' ') + (material.hazards.length > 2 ? ' ...' : '') : 'N/E'}
+                    </td>
+                    <td><span class="resiter-badge">${material.family}</span></td>
+                    <td>${formatDate(material.expiry)}</td>
+                    <td>${material.location || 'N/E'}</td>
+                    <td>
+                        <div class="action-group">
+                            ${pdfButton}
+                            <button class="btn-icon btn-icon-view" onclick="event.stopPropagation(); viewMaterial('${material.id}')" title="Ver">👁️</button>
+                            <button class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); editMaterial('${material.id}')" title="Editar">✏️</button>
+                            <button class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deleteMaterial('${material.id}')" title="Eliminar">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function getHazardColorByName(hazard) {
+            const colors = {
+                'Corrosivo': '#dc3545',
+                'Inflamable': '#fd7e14',
+                'Tóxico': '#6f42c1',
+                'Comburente': '#ffc107',
+                'Explosivo': '#dc3545',
+                'Nocivo': '#ffc107',
+                'Irritante': '#17a2b8',
+                'Peligroso ambiental': '#28a745',
+                'Peligro para la salud': '#00a9e0'
+            };
+            return colors[hazard] || '#6c757d';
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('es-ES');
+        }
+
+        function searchMaterials() {
+            loadMaterials();
+        }
+
+        function updatePreviewStats() {
+            const preview = document.getElementById('statsPreview');
+            if (!preview) return;
+            
+            const total = materials.length;
+            const altoRiesgo = materials.filter(m => m.hazard === 'Alto' || m.hazard === 'Extremo').length;
+            const porVencer = materials.filter(m => {
+                const days = Math.ceil((new Date(m.expiry) - new Date()) / (1000 * 60 * 60 * 24));
+                return days <= 90 && days > 0;
+            }).length;
+
+            preview.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${total}</div>
+                    <div>Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${altoRiesgo}</div>
+                    <div>Alto Riesgo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${porVencer}</div>
+                    <div>Por Vencer</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${new Set(materials.map(m => m.family)).size}</div>
+                    <div>Familias</div>
+                </div>
+            `;
+        }
+
+        function openModal(type, materialId = null) {
+            document.getElementById('materialModal').classList.add('active');
+            
+            if (type === 'edit' && materialId) {
+                document.getElementById('modalTitle').textContent = 'Editar Material';
+                const material = materials.find(m => m.id === materialId);
+                if (material) {
+                    document.getElementById('materialId').value = material.id;
+                    document.getElementById('materialName').value = material.name;
+                    document.getElementById('manufacturer').value = material.manufacturer || '';
+                    document.getElementById('materialFamily').value = material.family;
+                    document.getElementById('materialExpiry').value = material.expiry;
+                    document.getElementById('materialHazard').value = material.hazard;
+                    document.getElementById('materialMsds').value = material.msds || '';
+                    document.getElementById('materialStorage').value = material.storage || '';
+                    document.getElementById('materialPPE').value = material.ppe || '';
+                    document.getElementById('materialFirstAid').value = material.firstAid || '';
+                    document.getElementById('materialQuantity').value = material.quantity || '';
+                    document.getElementById('materialLocation').value = material.location || '';
+                    document.getElementById('materialObservations').value = material.observations || '';
+                    
+                    if (material.pdfName) {
+                        document.getElementById('pdfFileInfo').innerHTML = `📄 PDF actual: ${material.pdfName}`;
+                    }
+                    
+                    document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach(cb => {
+                        cb.checked = material.hazards && material.hazards.includes(cb.value);
+                    });
+                }
+            } else {
+                document.getElementById('modalTitle').textContent = 'Agregar Material';
+                document.getElementById('materialForm').reset();
+                document.getElementById('materialId').value = '';
+                document.getElementById('pdfFileInfo').innerHTML = '';
+                currentPdfFile = null;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('materialModal').classList.remove('active');
+            currentPdfFile = null;
+        }
+
+        function viewMaterial(id) {
+            const material = materials.find(m => m.id === id);
+            if (material) {
+                const content = document.getElementById('detailContent');
+                content.innerHTML = `
+                    <div class="detail-grid">
+                        <div class="detail-item"><span class="detail-label">Nombre:</span> ${material.name}</div>
+                        <div class="detail-item"><span class="detail-label">Fabricante:</span> ${material.manufacturer || 'N/E'}</div>
+                        <div class="detail-item"><span class="detail-label">Familia:</span> ${material.family}</div>
+                        <div class="detail-item"><span class="detail-label">Peligrosidad:</span> ${material.hazards ? material.hazards.join(', ') : 'N/E'}</div>
+                        <div class="detail-item"><span class="detail-label">Nivel:</span> ${material.hazard}</div>
+                        <div class="detail-item"><span class="detail-label">Revisión:</span> ${formatDate(material.expiry)}</div>
+                        <div class="detail-item"><span class="detail-label">Ubicación:</span> ${material.location || 'N/E'}</div>
+                        <div class="detail-item"><span class="detail-label">Cantidad:</span> ${material.quantity || 'N/E'}</div>
+                        <div class="detail-item" style="grid-column: span 2;"><span class="detail-label">PDF:</span> ${material.pdfUrl ? 
+                            `<button class="btn-icon btn-icon-pdf" onclick="viewPdf('${material.id}')">📄 Ver PDF</button>` : 
+                            'No disponible'}</div>
+                        <div class="detail-item" style="grid-column: span 2;"><span class="detail-label">MSDS:</span> ${material.msds || 'No disponible'}</div>
+                        <div class="detail-item" style="grid-column: span 2;"><span class="detail-label">Almacenamiento:</span> ${material.storage || 'No especificado'}</div>
+                        <div class="detail-item" style="grid-column: span 2;"><span class="detail-label">EPP:</span> ${material.ppe || 'No especificado'}</div>
+                        <div class="detail-item" style="grid-column: span 2;"><span class="detail-label">Primeros Auxilios:</span> ${material.firstAid || 'No especificado'}</div>
+                        <div class="detail-item" style="grid-column: span 2;"><span class="detail-label">Observaciones:</span> ${material.observations || 'Ninguna'}</div>
+                    </div>
+                `;
+                document.getElementById('detailModal').classList.add('active');
+            }
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        function editMaterial(id) {
+            openModal('edit', id);
+        }
+
+        function showStats() {
+            const content = document.getElementById('statsContent');
+            
+            const total = materials.length;
+            const porFamilia = materials.reduce((acc, m) => {
+                acc[m.family] = (acc[m.family] || 0) + 1;
+                return acc;
+            }, {});
+            
+            const porRiesgo = materials.reduce((acc, m) => {
+                acc[m.hazard] = (acc[m.hazard] || 0) + 1;
+                return acc;
+            }, {});
+
+            const familiasHtml = Object.entries(porFamilia).map(([f, c]) => 
+                `<div><span class="resiter-badge">${f}</span>: ${c}</div>`
+            ).join('');
+
+            const riesgosHtml = Object.entries(porRiesgo).map(([r, c]) => 
+                `<div><span class="badge" style="background: ${r === 'Alto' ? '#dc3545' : r === 'Medio' ? '#ffc107' : '#28a745'}">${r}</span>: ${c}</div>`
+            ).join('');
+
+            content.innerHTML = `
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-number">${total}</div>
+                        <div>Total</div>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <h3 style="color: #00a9e0; font-size: 1rem;">Familias</h3>
+                    <div>${familiasHtml}</div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <h3 style="color: #00a9e0; font-size: 1rem;">Riesgo</h3>
+                    <div>${riesgosHtml}</div>
+                </div>
+            `;
+            
+            document.getElementById('statsModal').classList.add('active');
+        }
+
+        function closeStatsModal() {
+            document.getElementById('statsModal').classList.remove('active');
+        }
+
+        function closePdfModal() {
+            document.getElementById('pdfModal').classList.remove('active');
+            document.getElementById('pdfViewer').src = '';
+        }
+
+        function loadMaterialsForCompatibility() {
+            const select1 = document.getElementById('material1');
+            const select2 = document.getElementById('material2');
+            
+            if (select1 && select2) {
+                const options = materials.map(m => 
+                    `<option value="${m.family}">${m.name}</option>`
+                ).join('');
+                
+                select1.innerHTML = '<option value="">Material 1</option>' + options;
+                select2.innerHTML = '<option value="">Material 2</option>' + options;
+            }
+        }
+
+        function generateCompatibilityTable() {
+            const tableHead = document.querySelector('#compatibilityTable thead tr');
+            const tableBody = document.getElementById('compatibilityBody');
+            
+            if (!tableHead || !tableBody) return;
+
+            tableHead.innerHTML = '<th>Producto</th><th>Familia</th>';
+            tableBody.innerHTML = '';
+
+            if (materials.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="2" style="text-align: center;">No hay materiales</td></tr>';
+                return;
+            }
+
+            materials.forEach(m => {
+                const th = document.createElement('th');
+                th.textContent = m.name.length > 15 ? m.name.substring(0,12)+'...' : m.name;
+                tableHead.appendChild(th);
+            });
+
+            materials.forEach(m1 => {
+                const row = document.createElement('tr');
+                
+                const nameCell = document.createElement('td');
+                nameCell.textContent = m1.name.length > 20 ? m1.name.substring(0,17)+'...' : m1.name;
+                row.appendChild(nameCell);
+                
+                const familyCell = document.createElement('td');
+                familyCell.innerHTML = `<span class="resiter-badge">${m1.family}</span>`;
+                row.appendChild(familyCell);
+                
+                materials.forEach(m2 => {
+                    const cell = document.createElement('td');
+                    if (m1.id === m2.id) {
+                        cell.textContent = '⚡';
+                        cell.classList.add('compatible');
+                    } else {
+                        const result = checkCompatibility(m1.family, m2.family);
+                        cell.textContent = result.symbol;
+                        cell.classList.add(result.class);
+                        cell.title = result.message;
+                    }
+                    row.appendChild(cell);
+                });
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        function checkCompatibility(family1, family2) {
+            const matrix = {
+                'No clasificados': { 
+                    'No clasificados': 'compatible', 
+                    'Ácidos': 'warning', 
+                    'Bases': 'warning', 
+                    'Oxidantes': 'warning', 
+                    'Inflamables': 'warning', 
+                    'Tóxicos': 'warning', 
+                    'Corrosivos': 'warning', 
+                    'Explosivos': 'warning', 
+                    'Gases': 'warning' 
+                },
+                'Ácidos': { 
+                    'No clasificados': 'warning',
+                    'Ácidos': 'compatible', 
+                    'Bases': 'incompatible', 
+                    'Oxidantes': 'warning', 
+                    'Inflamables': 'incompatible', 
+                    'Tóxicos': 'warning', 
+                    'Corrosivos': 'warning', 
+                    'Explosivos': 'incompatible', 
+                    'Gases': 'warning' 
+                },
+                'Bases': { 
+                    'No clasificados': 'warning',
+                    'Ácidos': 'incompatible', 
+                    'Bases': 'compatible', 
+                    'Oxidantes': 'warning', 
+                    'Inflamables': 'incompatible', 
+                    'Tóxicos': 'warning', 
+                    'Corrosivos': 'warning', 
+                    'Explosivos': 'incompatible', 
+                    'Gases': 'warning' 
+                },
+                'Oxidantes': { 
+                    'No clasificados': 'warning',
+                    'Ácidos': 'warning', 
+                    'Bases': 'warning', 
+                    'Oxidantes': 'compatible', 
+                    'Inflamables': 'incompatible', 
+                    'Tóxicos': 'incompatible', 
+                    'Corrosivos': 'warning', 
+                    'Explosivos': 'incompatible', 
+                    'Gases': 'warning' 
+                },
+                'Inflamables': { 
+                    'No clasificados': 'warning',
+                    'Ácidos': 'incompatible', 
+                    'Bases': 'incompatible', 
+                    'Oxidantes': 'incompatible', 
+                    'Inflamables': 'compatible', 
+                    'Tóxicos': 'warning', 
+                    'Corrosivos': 'warning', 
+                    'Explosivos': 'warning', 
+                    'Gases': 'warning' 
+                },
+                'Tóxicos': { 
+                    'No clasificados': 'warning',
+                    'Ácidos': 'warning', 
+                    'Bases': 'warning', 
+                    'Oxidantes': 'incompatible', 
+                    'Inflamables': 'warning', 
+                    'Tóxicos': 'compatible', 
+                    'Corrosivos': 'warning', 
+                    'Explosivos': 'warning', 
+                    'Gases': 'warning' 
+                },
+                'Corrosivos': { 
+                    'No clasificados': 'warning',
+                    'Ácidos': 'warning', 
+                    'Bases': 'warning', 
+                    'Oxidantes': 'warning', 
+                    'Inflamables': 'warning', 
+                    'Tóxicos': 'warning', 
+                    'Corrosivos': 'compatible', 
+                    'Explosivos': 'warning', 
+                    'Gases': 'warning' 
+                },
+                'Explosivos': { 
+                    'No clasificados': 'warning',
+                    'Ácidos': 'incompatible', 
+                    'Bases': 'incompatible', 
+                    'Oxidantes': 'incompatible', 
+                    'Inflamables': 'warning', 
+                    'Tóxicos': 'warning', 
+                    'Corrosivos': 'warning', 
+                    'Explosivos': 'compatible', 
+                    'Gases': 'incompatible' 
+                },
+                'Gases': { 
+                    'No clasificados': 'warning',
+                    'Ácidos': 'warning', 
+                    'Bases': 'warning', 
+                    'Oxidantes': 'warning', 
+                    'Inflamables': 'warning', 
+                    'Tóxicos': 'warning', 
+                    'Corrosivos': 'warning', 
+                    'Explosivos': 'incompatible', 
+                    'Gases': 'compatible' 
+                }
+            };
+
+            const result = matrix[family1]?.[family2] || 'warning';
+            
+            const symbols = {
+                'compatible': { symbol: '✅', class: 'compatible', message: 'Compatible' },
+                'incompatible': { symbol: '❌', class: 'incompatible', message: 'INCOMPATIBLE' },
+                'warning': { symbol: '⚠️', class: 'warning', message: 'Precaución' }
+            };
+
+            return symbols[result];
+        }
+
+        function checkSpecificCompatibility() {
+            const material1 = document.getElementById('material1').value;
+            const material2 = document.getElementById('material2').value;
+            
+            if (!material1 || !material2) {
+                alert('Seleccione ambos materiales');
+                return;
+            }
+
+            const result = checkCompatibility(material1, material2);
+            
+            let bgColor = result.class === 'compatible' ? '#d4edda' : 
+                         result.class === 'incompatible' ? '#f8d7da' : '#fff3cd';
+
+            document.getElementById('compatibilityResult').innerHTML = `
+                <div style="background: ${bgColor}; color: #333; padding: 1rem; border-radius: 8px;">
+                    <strong>Resultado:</strong> ${result.symbol} ${result.message}
+                </div>
+            `;
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#28a745' : '#dc3545'};
+                color: white;
+                padding: 0.8rem;
+                border-radius: 8px;
+                z-index: 3000;
+                animation: slideIn 0.3s ease;
+                font-size: 0.9rem;
+                max-width: 90%;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+
+    <style>
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</body>
+</html>
